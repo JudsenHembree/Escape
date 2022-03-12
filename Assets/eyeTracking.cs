@@ -7,32 +7,44 @@ public class eyeTracking: MonoBehaviour
     private static Ray testRay;
     private static FocusInfo focusInfo;
 
-    interestLvl example;
-
+    //the ouija board object
     public GameObject board;
+    public float lerpDuration;
+    private float timeElapsed;
+    //objects of whose interest we track
+    //namely the letters on board
     public GameObject[] objectsOfInterest;
-    public Transform keyLocation;
+    //current location of ouija key. updated throughout execution
+    private Transform keyLocation;
+    private Transform keyLocationResting;
 
+    //where key is headed
+    //will be home unless player is looking at letter
     private Transform lerpDest;
+    //original location of key. It's like the center of the board
     private Transform home;
+
+    private bool lerpin;
 
 
 
     // Start is called before the first frame update
     void Start()
     {
-        home = board.transform.Find("ouija key");
+        home = board.transform.Find("ouija home");
+        keyLocation = board.transform.Find("ouija key");
+        lerpDest = home;
+        setResting();
+        lerpin=false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        checkFocus();
-        /*
-        if(FocusName()=="a"){
-            Debug.Log("a");
-        }
-        */
+        interest(objectsOfInterest);
+        lerpDest = determineLerpDest(objectsOfInterest);
+        lerpandslerp();
+        sendKeyHome();
     }
 
     //This function stores info in focus info
@@ -60,17 +72,25 @@ public class eyeTracking: MonoBehaviour
         }  
     }
 
-    public void grow(uint x){
-        if(x<270){
-            x++; 
+    private bool noInterest(GameObject[] objects){
+        foreach(GameObject meme in objects){
+            if (meme.GetComponent<interestLvl>().interest != 1){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void sendKeyHome(){
+        if(noInterest(objectsOfInterest)){
+            if(keyLocation != home){
+                lerpDest = home;
+                lerpin = true;
+                StartCoroutine(lerp());
+            }
         }
     }
 
-    public void decay(uint x){
-        if (x>0){
-            x--;
-        }
-    }
 
     public void interest(GameObject[] objects){
         GameObject temp = Focus();
@@ -78,66 +98,62 @@ public class eyeTracking: MonoBehaviour
             foreach(GameObject meme in objects){
                 if(meme == temp){
                     if(meme.GetComponent<interestLvl>() != null){
-                        grow(meme.GetComponent<interestLvl>().interestX);
+                        meme.GetComponent<interestLvl>().grow();
+                        //Debug.Log("growing "+meme);
                     }else{
                         Debug.Log(meme.name + " should have the interestLvl script attached to it.");
                     }
                 }else{
                     if(meme.GetComponent<interestLvl>() != null){
-                        decay(meme.GetComponent<interestLvl>().interestX);
+                        meme.GetComponent<interestLvl>().decay();
+                        //Debug.Log("decaying "+meme);
                     }else{
                         Debug.Log(meme.name + " should have the interestLvl script attached to it.");
                     }
                 }
             }
-
         }
     }
-    private void checkFocus(){
-        GameObject temp = Focus();
-        if(temp is null)
-        {
-            return;
-        }
-        else if(temp.transform.parent is null){
-            return;
-        }
-        else if(temp.transform.parent.parent is null){
-            return;
-        }
-        else if(temp.transform.parent.parent.gameObject==board)
-        {
-            lerpDest = temp.transform.parent.parent.Find("key destinations").Find(temp.name);
-        }
-    }
-
     private Transform determineLerpDest(GameObject[] objects){
-        Transform lerpDest = home;
+        Transform lerpDest = keyLocation;
         foreach(GameObject meme in objects){
             if(meme.GetComponent<interestLvl>() == null){
                 Debug.Log("There should be an interestLvl script attached to object " + meme.name);
             }else{
+                //probably need to adjust for multiple letters over the twosecondmark
                 if(meme.GetComponent<interestLvl>().interest>=meme.GetComponent<interestLvl>().twoSecondMark){
+                    //Debug.Log("setting new lerp dest " + meme);
                     string name = meme.name;
                     lerpDest = meme.transform.parent.parent.Find("key destinations").Find(name);
                 }
             }
         }
+        Debug.Log("Final lerp dest " + lerpDest.gameObject);
         return lerpDest;
     }
-    /*
     //TODO: set up the actual lerp
-    private void lerp(){
-
-    }
-    //TODO: finish this lerpandslerp func
-    private void lerpAndSlerp(){
-        if(startLerp){
-            if (lerpDest != keyLocation){
-                lerp()
-            }
+    private IEnumerator lerp(){
+        lerpin = true;
+        timeElapsed=0;
+        while(timeElapsed<lerpDuration){
+            keyLocation.position=Vector3.Lerp(keyLocationResting.position,lerpDest.position,timeElapsed/lerpDuration);
+            timeElapsed+=Time.deltaTime;
+            yield return null;
         }
-        
+        keyLocation.position = lerpDest.position;
+        setResting();
+        lerpin = false;
     }
-    */
+
+    private void lerpandslerp(){
+        if(keyLocation.position != lerpDest.position && !lerpin){
+            Debug.Log("lerpin");
+            StartCoroutine(lerp());
+        }
+    }
+
+
+    private void setResting(){
+        keyLocationResting=keyLocation;
+    }
 }
