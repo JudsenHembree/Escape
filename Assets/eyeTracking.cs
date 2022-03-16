@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using ViveSR.anipal.Eye;
 
@@ -37,19 +38,22 @@ public class eyeTracking: MonoBehaviour
     private string ouijaWord; 
     //collect sequence entered on ouija board to pass to an array of words, 
     //call a func based of sequence
-    private string[] commands;
+    private List<string> commands;
     //sequence of commands
-
-
 
     // Start is called before the first frame update
     void Start()
     {
+
         home = board.transform.Find("ouija home");
         keyLocation = board.transform.Find("ouija key");
         lerpDest = home;
         setResting();
         lerpin=false;
+        commands = new List<string>();
+        commands.Add("test");
+        commands.Add("lights");
+
     }
 
     // Update is called once per frame
@@ -112,16 +116,23 @@ public class eyeTracking: MonoBehaviour
     }
 
     //check ouija word against list of commands then do stuff
-    private void checkWordForCommand(string[] x){
+    private void checkWordForCommand(List<string> x){
         if(!string.IsNullOrEmpty(ouijaWord)){
-            Debug.Log("word is currently, "+ouijaWord);
+            foreach(string command in commands){
+                if(ouijaWord == command){
+                    Invoke(command, 0);
+                }
+            }
         }
-        if(ouijaWord=="test"){
-            Debug.Log("word checks out");
-        }
-        //do stuff
     }
 
+    private void lights(){
+        Debug.Log("lights");
+    }
+
+    private void test(){
+        Debug.Log("test");
+    }
 
     //calulates interest metric for each object we care about
     public void interest(GameObject[] objects){
