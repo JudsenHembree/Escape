@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using ViveSR.anipal.Eye;
 
 public class eyeTracking: MonoBehaviour
@@ -12,6 +13,12 @@ public class eyeTracking: MonoBehaviour
 
     public GameObject board;
     //the ouija board object
+    public GameObject portrait;
+    //the portrait
+    public Material portraitMat;
+    public Text portraitNormalText;
+    public Text portraitRayText;
+    public Text portraitAngleText;
 
     public float lerpDuration;
     //how long lerp last
@@ -63,6 +70,7 @@ public class eyeTracking: MonoBehaviour
         determineLerpDest(objectsOfInterest);
         lerpandslerp();
         sendKeyHome();
+        portraitInterest();
     }
 
     //This function stores info in focus info
@@ -158,6 +166,39 @@ public class eyeTracking: MonoBehaviour
         }
     }
 
+    public void mapToLerpValue(float x){
+        x = x/80;
+        portraitMat.SetFloat("_LerpValue", x);
+    }
+
+    public void portraitInterest(){
+        GameObject temp = Focus();
+        if (temp != null){
+            if(temp == portrait){
+
+                Vector3 rayOrigin;
+                Vector3 rayDirection;
+                //focusInfo is the information from sranipal
+                //Vector3 portraitNormal = focusInfo.normal;
+                Vector3 portraitNormal = new Vector3(0,0,1);
+                //testRay is the sranipal raycast
+                SRanipal_Eye.GetGazeRay(GazeIndex.COMBINE, out rayOrigin, out rayDirection);
+
+                rayOrigin=Camera.main.transform.TransformPoint(rayOrigin);
+                rayDirection=Camera.main.transform.TransformDirection(rayDirection);
+                float angle = Vector3.Angle(portraitNormal, rayDirection);
+
+                portraitRayText.text = "Ray Direction: " +rayDirection.ToString();
+                portraitNormalText.text = "Portrait Normal: "+portraitNormal.ToString();
+                portraitAngleText.text = "Out Angle: "+angle.ToString();
+
+                mapToLerpValue(angle);
+            }
+        }
+    }
+ 
+
+
     //determines ouija key destination based of interest metric
     private void determineLerpDest(GameObject[] objects){
         if(!lerpin){
@@ -180,7 +221,7 @@ public class eyeTracking: MonoBehaviour
 
     //moves the key also manages the ouija word sequence
     private IEnumerator lerp(){
-        Debug.Log("lerpin");
+        //Debug.Log("lerpin");
         addLetter();
         timeElapsed=0;
         while(timeElapsed<lerpDuration){
