@@ -11,9 +11,11 @@ public class eyeTracking: MonoBehaviour
     private static FocusInfo focusInfo;
     //eye memes
 
+    public GameObject door;
     public GameObject board;
     //the ouija board object
-    public GameObject portrait;
+    public GameObject castlePortrait;
+    public GameObject womanPortrait;
     //the portrait
     public Material portraitMat;
     public Text portraitNormalText;
@@ -47,6 +49,8 @@ public class eyeTracking: MonoBehaviour
     //call a func based of sequence
     private List<string> commands;
     //sequence of commands
+
+    public Light[] lightsInScene;
 
     // Start is called before the first frame update
     void Start()
@@ -128,14 +132,38 @@ public class eyeTracking: MonoBehaviour
         if(!string.IsNullOrEmpty(ouijaWord)){
             foreach(string command in commands){
                 if(ouijaWord == command){
-                    Invoke(command, 0);
+                    if(command!="lights"){
+                        Invoke(command, 0);
+                    }else{
+                        StartCoroutine(lights());
+                    }
                 }
             }
         }
     }
 
-    private void lights(){
-        Debug.Log("lights");
+    private IEnumerator lights(){
+        Debug.Log("calling lights()");
+        float timeElapsed = 0;
+        while(timeElapsed<3){
+            foreach(Light meme in lightsInScene){
+                meme.enabled = !meme.enabled;
+            }
+            timeElapsed+=.5f;
+            yield return new WaitForSeconds(.5f);
+        }
+        foreach(Light meme in lightsInScene){
+            meme.enabled = true;
+        }
+    }
+
+/*
+    private IEnumerator fadeDoor(){
+
+    }
+    */
+    private void code(){
+
     }
 
     private void test(){
@@ -166,15 +194,29 @@ public class eyeTracking: MonoBehaviour
         }
     }
 
-    public void mapToLerpValue(float x){
+    public void mapToLerpValue(GameObject port, float x){
+        Material portraitMat = port.GetComponent<Renderer>().material;
         x = x/80;
         portraitMat.SetFloat("_LerpValue", x);
+        if (x>.9){
+            if (port == castlePortrait){
+               GetComponent<story>().castle = true;
+            }else{
+               GetComponent<story>().woman = true;
+            }
+        }else{
+            if (port == castlePortrait){
+               GetComponent<story>().castle = false;
+            }else{
+               GetComponent<story>().woman = false;
+            }
+        }
     }
 
     public void portraitInterest(){
         GameObject temp = Focus();
         if (temp != null){
-            if(temp == portrait){
+            if(temp == castlePortrait || temp == womanPortrait){
 
                 Vector3 rayOrigin;
                 Vector3 rayDirection;
@@ -188,11 +230,13 @@ public class eyeTracking: MonoBehaviour
                 rayDirection=Camera.main.transform.TransformDirection(rayDirection);
                 float angle = Vector3.Angle(portraitNormal, rayDirection);
 
+                /*
                 portraitRayText.text = "Ray Direction: " +rayDirection.ToString();
                 portraitNormalText.text = "Portrait Normal: "+portraitNormal.ToString();
                 portraitAngleText.text = "Out Angle: "+angle.ToString();
+                */
 
-                mapToLerpValue(angle);
+                mapToLerpValue(temp, angle);
             }
         }
     }
