@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR.InteractionSystem;
 
+
 public class pedastoolPuzzle : MonoBehaviour
 {
 
@@ -10,11 +11,16 @@ public class pedastoolPuzzle : MonoBehaviour
     public GameObject[] placeables;
     public GameObject[] placeablesDest;
 
+    private GameObject currentObject;
+
     public bool AOIbool;
+    public bool objectInPlace;
 
     // Start is called before the first frame update
     void Start()
     {
+        currentObject = null;
+        objectInPlace = false;
         AOIbool = false;
     }
 
@@ -37,6 +43,19 @@ public class pedastoolPuzzle : MonoBehaviour
         return -1;
     }
 
+private void OnTriggerEnter(Collider other)
+{
+    Debug.Log("entering" + other.gameObject);
+    if(other.gameObject.GetComponent<Interactable>()){
+        if(!other.gameObject.GetComponent<Interactable>().attachedToHand){
+            if(!objectInPlace){
+                Debug.Log("lerping");
+                objectInPlace = true;
+                StartCoroutine(lerpPedastool(other.gameObject, placeablesDest[grabePlaceableIndex(other.gameObject)]));
+            }
+        }
+    }
+}
 
     private void OnTriggerStay(Collider other)
     {
@@ -46,12 +65,22 @@ public class pedastoolPuzzle : MonoBehaviour
     }
 
     private void OnTriggerExit(Collider other){
-        if(other.gameObject == desiredObject){
-            AOIbool = false;
+        if(other.gameObject.GetComponent<Interactable>()){
+            if(other.gameObject.GetComponent<Interactable>().attachedToHand){
+                if(other.gameObject == desiredObject){
+                    AOIbool = false;
+                }
+                if(other.gameObject == currentObject){
+                    objectInPlace = false;
+                    currentObject = null;
+                }
+                Debug.Log("exiting" + other.gameObject);
+            }
         }
     }
 
     private IEnumerator lerpPedastool(GameObject ob, GameObject objectDest){
+        currentObject = ob;
         ob.GetComponent<Interactable>().enabled = false;
         Vector3 startPos = ob.transform.position;
         Quaternion startRot = ob.transform.rotation;
@@ -68,5 +97,6 @@ public class pedastoolPuzzle : MonoBehaviour
         ob.transform.position = endPos;
         ob.transform.rotation = endRot;
         ob.GetComponent<Interactable>().enabled = true;
+        ob.GetComponent<Rigidbody>().isKinematic = true;
     }
 }
