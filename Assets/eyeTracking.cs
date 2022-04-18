@@ -11,6 +11,7 @@ public class eyeTracking: MonoBehaviour
     private static FocusInfo focusInfo;
     //eye memes
 
+    public GameObject story;
     public GameObject door;
     public GameObject board;
     //the ouija board object
@@ -64,6 +65,7 @@ public class eyeTracking: MonoBehaviour
         commands = new List<string>();
         commands.Add("test");
         commands.Add("lights");
+        commands.Add("judsen");
 
     }
 
@@ -157,13 +159,9 @@ public class eyeTracking: MonoBehaviour
         }
     }
 
-/*
-    private IEnumerator fadeDoor(){
-
-    }
-    */
-    private void code(){
-
+    private void judsen(){
+        Debug.Log("calling jud");
+        story.GetComponent<story>().task3 = true;
     }
 
     private void test(){

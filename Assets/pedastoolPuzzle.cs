@@ -10,8 +10,7 @@ public class pedastoolPuzzle : MonoBehaviour
     public GameObject desiredObject;
     public GameObject[] placeables;
     public GameObject[] placeablesDest;
-
-    private GameObject currentObject;
+    public GameObject currentObject;
 
     public bool AOIbool;
     public bool objectInPlace;
@@ -33,7 +32,7 @@ public class pedastoolPuzzle : MonoBehaviour
         return false;
     }
 
-    private int grabePlaceableIndex(GameObject ob){
+    public int grabePlaceableIndex(GameObject ob){
         for(int i = 0; i < placeables.Length; i++){
             if(ob == placeables[i]){
                 return i;
@@ -59,8 +58,10 @@ private void OnTriggerEnter(Collider other)
 
     private void OnTriggerStay(Collider other)
     {
-        if(other.gameObject == desiredObject){
-            AOIbool = true;
+        if(desiredObject){
+            if(other.gameObject == desiredObject){
+                AOIbool = true;
+            }
         }
     }
 
